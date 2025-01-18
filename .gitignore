@@ -1,0 +1,10 @@
+.pnp.*
+.venv
+.env
+node-modules
+*.log
+.idea
+.vscode
+.yarn
+__pycache__
+.ipynb
