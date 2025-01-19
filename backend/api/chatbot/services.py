@@ -1,8 +1,6 @@
 import os
 
-from langchain_openai import OpenAIEmbeddings
-from langchain_chroma import Chroma
-from chromadb import HttpClient, EmbeddingFunction
+from chromadb import HttpClient
 from langchain.retrievers.multi_vector import MultiVectorRetriever
 from langchain.storage import InMemoryStore
 
@@ -15,6 +13,8 @@ from .agents import (
 )
 from api.database.db import AsyncSession
 from .schemas import ChatRecord
+from .models import Chat as ChatModel, IngestedFile as IngestedFileModel
+from api.utils.hash_file import get_file_hash
 
 LAST_CHATS_NUM = 50
 csv_file = {"file_url": "./data/tax_data.csv", "table_name": "tax"}
@@ -27,11 +27,22 @@ def load_csv_file(file: str):
     csv_loader.load(file_url=file["file_url"], table_name=file["table_name"])
 
 
-def load_pdf_files(file_urls: list[str]):
+async def load_pdf_files(file_urls: list[str], db: AsyncSession):
     collection = get_chroma_collection()
     pdf_loader = PDFLoader(collection)
-    for file in file_urls:
-        pdf_loader.load(file)
+    for file_url in file_urls:
+        pdf_file_name = file_url.split("/")[-1]
+        pdf_file_hash = get_file_hash(file_url)
+        result = await IngestedFileModel.find_by_file_hash(
+            db=db, file_hash=pdf_file_hash
+        )
+        if not result:
+            pdf_loader.load(file_url)
+            await IngestedFileModel.create(
+                db=db, file_name=pdf_file_name, file_hash=pdf_file_hash
+            )
+        else:
+            logger.info(f"Already ingested {file_url}, skip it")
 
 
 def load_ppt_file(file_url: str, vs_client: HttpClient) -> MultiVectorRetriever:
@@ -41,16 +52,38 @@ def load_ppt_file(file_url: str, vs_client: HttpClient) -> MultiVectorRetriever:
     ppt_loader.load(file_url)
 
 
-def gen_knowledgebase():
+async def gen_knowledgebase(db: AsyncSession):
     try:
-        load_csv_file(csv_file)
+        csv_file_name = csv_file["file_url"].split("/")[-1]
+        csv_file_hash = get_file_hash(csv_file["file_url"])
+        result = await IngestedFileModel.find_by_file_hash(
+            db=db, file_hash=csv_file_hash
+        )
+        if not result:
+            load_csv_file(csv_file)
+            await IngestedFileModel.create(
+                db=db, file_name=csv_file_name, file_hash=csv_file_hash
+            )
+        else:
+            logger.info(f"Already ingested {csv_file_name}, skip it")
 
+        await load_pdf_files(file_urls=pdf_files, db=db)
         chroma_host = os.getenv("CHROMA_HOST", "chromadb")
         chroma_port = os.getenv("CHROMA_PORT", "8200")
         chroma_client = HttpClient(host=chroma_host, port=int(chroma_port))
-        load_pdf_files(file_urls=pdf_files)
 
-        load_ppt_file(file_url=ppt_file, vs_client=chroma_client)
+        ppt_file_name = ppt_file.split("/")[-1]
+        ppt_file_hash = get_file_hash(ppt_file)
+        result = await IngestedFileModel.find_by_file_hash(
+            db=db, file_hash=ppt_file_hash
+        )
+        if not result:
+            load_ppt_file(file_url=ppt_file, vs_client=chroma_client)
+            await IngestedFileModel.create(
+                db=db, file_name=ppt_file_name, file_hash=ppt_file_hash
+            )
+        else:
+            logger.info(f"Already ingested {ppt_file_name}, skip it")
     except Exception as e:
         logger.error(f"Something wrong when ingesting files: {str(e)}")
         return {"status": "Failed", "error": str(e)}

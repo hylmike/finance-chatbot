@@ -11,10 +11,10 @@ from api.utils.logger import logger
 
 
 class RoleType(StrEnum):
-    SYSTEM = "SYSTEM"
-    AI = "AI"
-    HUMAN = "HUMAN"
-    TOOL = "TOOL"
+    SYSTEM = "system"
+    AI = "ai"
+    HUMAN = "human"
+    TOOL = "tool"
 
 
 class Chat(Base):
@@ -56,3 +56,33 @@ class Chat(Base):
             .limit(limit)
         )
         return query.all()
+
+
+class IngestedFile(Base):
+    """ingested_files table to save all ingested files for vector database"""
+
+    __tablename__ = "ingested_files"
+
+    id = Column(Integer, primary_key=True, index=True)
+    file_name = Column(String, nullable=False)
+    file_hash = Column(String, nullable=False)
+    created = Column(DateTime, server_default=func.now())
+
+    @classmethod
+    async def create(cls, db: AsyncSession, **kwargs):
+        new_record = cls(**kwargs)
+        try:
+            db.add(new_record)
+            await db.commit()
+            await db.refresh(new_record)
+        except Exception as e:
+            logger.exception(
+                f"Failed to insert new record in ingested_files table: {e}"
+            )
+
+        return new_record
+
+    @classmethod
+    async def find_by_file_hash(cls, db: AsyncSession, file_hash: int):
+        query = await db.execute(select(cls).where(cls.file_hash == file_hash))
+        return query.scalars().all()

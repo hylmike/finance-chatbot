@@ -7,4 +7,4 @@ node-modules
 .vscode
 .yarn
 __pycache__
-.ipynb
+*.ipynb

@@ -12,6 +12,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain.retrievers.multi_vector import MultiVectorRetriever
 from chromadb import HttpClient, EmbeddingFunction
+from chromadb.utils import embedding_functions
 from langchain_chroma import Chroma
 from langchain.storage import InMemoryStore
 from langgraph.graph import StateGraph, END
@@ -39,16 +40,19 @@ class QueryOutput(TypedDict):
     query: Annotated[str, ..., "Syntactically valid SQL query."]
 
 
-llm = ChatOpenAI(model="gpt-40-mini", temperature=0.01)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.01)
 
 
 def get_chroma_collection():
     chroma_host = os.getenv("CHROMA_HOST", "chromadb")
     chroma_port = os.getenv("CHROMA_PORT", "8200")
     client = HttpClient(host=chroma_host, port=int(chroma_port))
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+    openai_ef = embedding_functions.OpenAIEmbeddingFunction(
+        api_key=os.environ["OPENAI_API_KEY"],
+        model_name="text-embedding-3-large",
+    )
     collection = client.get_or_create_collection(
-        TEXT_COLLECTION_NAME, embedding_function=embeddings
+        TEXT_COLLECTION_NAME, embedding_function=openai_ef
     )
 
     return collection
@@ -147,6 +151,7 @@ information from image(s), if you can't find relevant information, just return e
     return response.content
 
 
+@tool("final_answer")
 def final_answer(question: str, context: str):
     """Return a nature language response to the user, 
     based on original user question and aggregated context \
@@ -246,7 +251,7 @@ the final_answer tool to generate final answer.
         [
             (RoleType.SYSTEM, system_message),
             MessagesPlaceholder(variable_name="chat_history"),
-            (RoleType.HUMAN, "{input}"),
+            (RoleType.HUMAN, "{question}"),
             (RoleType.AI, "scratchpad: {scratchpad}"),
         ]
     )
@@ -283,7 +288,7 @@ the final_answer tool to generate final answer.
     graph_builder.add_node("query_tax_data", run_tool)
     graph_builder.add_node("search_tax_code", run_tool)
     graph_builder.add_node("search_data_from_images", run_tool)
-    graph_builder.add_node("final_anwer", run_tool)
+    graph_builder.add_node("final_answer", run_tool)
 
     graph_builder.set_entry_point("processor")
 

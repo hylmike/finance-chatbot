@@ -11,7 +11,7 @@ class PDFLoader:
     def __init__(self, vs_collection: Collection):
         self.collection = vs_collection
 
-    async def load(self, file_url: str):
+    def load(self, file_url: str):
         try:
             loader = PyMuPDFLoader(file_url)
             raw_docs = loader.load()

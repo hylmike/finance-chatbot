@@ -30,6 +30,7 @@ class PPTLoader:
             embedding_function=embedding_function,
         )
         self.ppt_url = None
+        self.store = store
 
     def extract_shape_content(
         self,
@@ -49,20 +50,19 @@ class PPTLoader:
                     extracted_images=extracted_images,
                 )
         if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
-            for picture in shape:
-                image = picture.image
-                # ---get image "file" contents---
-                image_bytes = image.blob
-                # ---assign a name for the file, e.g. 'image.jpg'---
-                ppt_file_name = self.ppt_url.split("/")[-1].lower()
-                image_index = len(extracted_images) + 1
-                image_filename = f"{IMAGE_URL_PREFIX}/{ppt_file_name}_slide{slide_index}_image{image_index}.{image.ext}"
-                with open(image_filename, "wb") as f:
-                    f.write(image_bytes)
-                extracted_images.append(image_filename)
-                logger.info(
-                    f"Extracted image {image_filename} from ppt file {self.ppt_url}"
-                )
+            image = shape.image
+            # ---get image "file" contents---
+            image_bytes = image.blob
+            # ---assign a name for the file, e.g. 'image.jpg'---
+            ppt_file_name = self.ppt_url.split("/")[-1].split(".")[0].lower()
+            image_index = len(extracted_images) + 1
+            image_filename = f"{IMAGE_URL_PREFIX}/{ppt_file_name}_slide{slide_index}_image{image_index}.{image.ext}"
+            with open(image_filename, "wb") as f:
+                f.write(image_bytes)
+            extracted_images.append(image_filename)
+            logger.info(
+                f"Extracted image {image_filename} from ppt file {self.ppt_url}"
+            )
 
     def extract_contents(self, file_url: str) -> tuple[list[str], list[str]]:
         self.ppt_url = file_url
@@ -90,7 +90,7 @@ class PPTLoader:
 
         return extracted_texts, extracted_images
 
-    async def load(self, file_url: str) -> MultiVectorRetriever:
+    def load(self, file_url: str) -> MultiVectorRetriever:
         extracted_texts, extracted_images = self.extract_contents(file_url)
         # Embedding all extracted texts, one record per slide
         documents = [
@@ -101,7 +101,7 @@ class PPTLoader:
         self.text_vector_store.add_documents(documents=documents, ids=ids)
 
         # Create multi vector retriever to save image summary embeddings and raw image files
-        image_base64_list, image_summaries = await gen_image_summaries(
+        image_base64_list, image_summaries = gen_image_summaries(
             extracted_images
         )
         id_key = "image_id"

@@ -7,7 +7,7 @@ from .services import (
 )
 from .schemas import ChatCompletionRequest
 from api.dependencies.db import DBSessionDep
-from api.dependencies.auth import CurrentUserDep, validate_auth
+from api.dependencies.auth import CurrentUserDep, valid_is_authenticated
 
 chatbot_router = APIRouter()
 
@@ -21,7 +21,9 @@ async def ai_completion(
     return {"completion": completion}
 
 
-@chatbot_router.get("/chat-history", dependencies=[Depends(validate_auth)])
+@chatbot_router.get(
+    "/chat-history", dependencies=[Depends(valid_is_authenticated)]
+)
 async def chat_history(db: DBSessionDep, user: CurrentUserDep):
     """Load chat history belong to current user"""
     chats = await get_chat_history(db, user.id)
@@ -29,8 +31,9 @@ async def chat_history(db: DBSessionDep, user: CurrentUserDep):
 
 
 @chatbot_router.post(
-    "/gen-knowledgebase", dependencies=[Depends(validate_auth)]
+    "/gen-knowledgebase", dependencies=[Depends(valid_is_authenticated)]
 )
-async def generate_knowledgebase():
+async def generate_knowledgebase(db: DBSessionDep):
     """Generate RAG knowledge base from input webs and docs, and save into vector database"""
-    await gen_knowledgebase()
+    result = await gen_knowledgebase(db)
+    return result
