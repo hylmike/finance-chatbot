@@ -4,14 +4,16 @@ import { AccountCircle, SmartToy } from '@mui/icons-material';
 import { useAuth } from './auth/AuthProvider';
 import { Navigate } from 'react-router-dom';
 import { ChatRecord } from './auth/auth-interface';
+import CircularProgress from '@mui/material/CircularProgress';
 import './App.css';
 
 function App() {
   const [question, setQuestion] = useState('')
   const [chatHistory, setChatHistory] = useState<ChatRecord[]>([])
+  const [runningIngestion, setRunningIngestion] = useState(false)
   const messageEndRef = useRef(null)
   const auth = useAuth()
-  const baseUrl = `${import.meta.env.VITE_API_URL}/api/genai`;
+  const baseUrl = `${import.meta.env.VITE_API_URL}/api/chatbot`;
 
   useEffect(() => {
     if (auth.token === '') {
@@ -29,12 +31,12 @@ function App() {
   }, [auth.token, baseUrl])
 
   useEffect(() => {
-    if (messageEndRef?.current && chatHistory.length) {
+    if (messageEndRef?.current && chatHistory?.length) {
       console.log(messageEndRef);
 
       messageEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
     }
-  }, [messageEndRef, chatHistory.length])
+  }, [messageEndRef, chatHistory?.length])
 
   if (auth.token === '') {
     return <Navigate to='/login' />
@@ -62,12 +64,14 @@ function App() {
   }
 
   const handleGenKnowledgeBase = async () => {
+    setRunningIngestion(true)
     const res = await fetch(`${baseUrl}/gen-knowledgebase`, {
       method: "POST",
       headers: { Authorization: `Bearer ${auth.token}` },
     });
     if (res.status === 200) {
-      prompt("Successfully generate knowledgebase in backend!")
+      setRunningIngestion(false)
+      alert("Successfully generate knowledgebase in backend!");
     }
   }
 
@@ -82,10 +86,11 @@ function App() {
           variant='contained'
           size='small'
           onClick={handleGenKnowledgeBase}
+          className='ingestion-button'
         >
-          Generate RAG Knowledge Base
+          {runningIngestion ? <CircularProgress size='20px' color='inherit' /> : 'Generate Knowledge Base'}
         </Button>
-        <h2 className='title'>AI Assitant</h2>
+        <h2 className='title'>Finance Chatbot</h2>
         <div className='user-section'>
           <Typography className='user-greeting'>Hi, {auth.user}</Typography>
           <Button
@@ -100,7 +105,7 @@ function App() {
       <div className='chat-history'>
         {chatHistory?.map((record, index) => (
           <div key={index} className='chat-container'>
-            {record.role_type === "AI" ? <SmartToy className='ai-logo' /> : <AccountCircle className='human-logo' />}
+            {record.role_type === "ai" ? <SmartToy className='ai-logo' /> : <AccountCircle className='human-logo' />}
             <Typography className='chat-content'>{record.content}</Typography>
           </div>
         ))}

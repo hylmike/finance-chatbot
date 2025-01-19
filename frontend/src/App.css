@@ -9,7 +9,7 @@
   background-color: black;
   padding: 1rem;
   width: 1000px;
-  height: 580px;
+  height: 80vh;
   border-radius: 5px;
 }
 
@@ -38,7 +38,7 @@
 .chat-history {
   padding: 1rem;
   width: 970px;
-  height: 420px;
+  height: 63vh;
   text-align: left;
   overflow: auto;
   border: 1px;
@@ -78,4 +78,8 @@
 .text-field {
   background-color: darkgrey;
   border-radius: 10px;
+}
+
+.ingestion-button {
+  width: 250px;
 }

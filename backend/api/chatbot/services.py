@@ -20,7 +20,7 @@ from .models import (
 )
 from api.utils.hash_file import get_file_hash
 
-LAST_CHATS_NUM = 50
+RETRIEVE_CHATS_NUM = 50
 csv_file = {"file_url": "./data/tax_data.csv", "table_name": "tax"}
 pdf_files = ["./data/i1040gi.pdf", "./data/usc26@118-78.pdf"]
 ppt_file = "./data/MIC_3e_Ch11.pptx"
@@ -100,13 +100,18 @@ async def gen_ai_completion(
 ) -> str:
     graph = build_rag_graph()
 
-    # await ChatModel.create(
-    #     db, user_id=user_id, role_type=RoleType.HUMAN, content=question
-    # )
+    await ChatModel.create(
+        db=db, user_id=user_id, role_type=RoleType.HUMAN, content=question
+    )
     response = graph.invoke({"question": question, "chat_history": []})
+    completion = response["inter_steps"][-1].log
+    await ChatModel.create(
+        db=db, user_id=user_id, role_type=RoleType.AI, content=completion
+    )
 
-    return response["inter_steps"][-1].log
+    return completion
 
 
 async def get_chat_history(db: AsyncSession, user_id: int) -> list[ChatRecord]:
-    return []
+    chat_history = await ChatModel.find_by_userid(db, user_id)
+    return chat_history

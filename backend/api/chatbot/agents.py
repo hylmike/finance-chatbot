@@ -43,10 +43,15 @@ class QueryOutput(TypedDict):
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.01)
 
 
-def get_chroma_collection():
+def get_chroma_client():
     chroma_host = os.getenv("CHROMA_HOST", "chromadb")
     chroma_port = os.getenv("CHROMA_PORT", "8200")
     client = HttpClient(host=chroma_host, port=int(chroma_port))
+    return client
+
+
+def get_chroma_collection():
+    client = get_chroma_client()
     openai_ef = embedding_functions.OpenAIEmbeddingFunction(
         api_key=os.environ["OPENAI_API_KEY"],
         model_name="text-embedding-3-large",
@@ -95,13 +100,17 @@ def write_query(question: str, db: SQLDatabase):
 
 
 @tool("query_tax_data")
-def query_tax_data(question: str):
+def query_tax_data(query: str):
     """Query question related data from give database and return SQL query and result"""
     db = SQLDatabase(engine=db_sync_engine)
 
     # generate DB query based in question
-    db_query = write_query(question=question, db=db)
-    result = db.run(db_query)
+    db_query = write_query(question=query, db=db)
+    try:
+        result = db.run(db_query)
+    except Exception as e:
+        logger.error(f"Failed to run {db_query} on DB: {str(e)}")
+        return ""
 
     return f"SQL Query: {db_query}\nSQL Result: {str(result)}\n"
 
@@ -119,16 +128,20 @@ def search_tax_code(query: str):
     return retrieved_context
 
 
-@tool("search_data_from_images")
-def search_data_from_images(query: str):
-    """Retrieve question related images from vector database,
-    then use them as context feed to LLM to get question related data from image"""
-    multi_retriever = get_multi_vector_retriever()
+@tool("search_tax_data_from_images")
+def search_tax_data_from_images(query: str):
+    """Retrieve question related summaries from vector database, then feed summaries with related
+    images as context to LLM to extract question related data from images"""
+    client = get_chroma_client()
+    embedding_function = OpenAIEmbeddings(model="text-embedding-3-large")
+    multi_retriever = get_multi_vector_retriever(
+        vs_client=client, embedding_function=embedding_function
+    )
     images = multi_retriever.invoke(query)
 
-    system_prompt = """You are a tax advisor tasked with providing tax information or suggestion. \
-You will be given one or several images usually of charts or graphs. Answer the question based on \
-information from image(s), if you can't find relevant information, just return empty string."""
+    system_prompt = """You are a advisor tasked with providing information related to query. \
+You will be given one or several images usually of charts or graphs. Extract query related \
+information from image(s), if you can't find relevant information, just return ''."""
 
     human_messages = []
     for image in images:
@@ -137,7 +150,7 @@ information from image(s), if you can't find relevant information, just return e
             "image_url": {"url": f"data:image/jpeg;base64,{image}"},
         }
         human_messages.append(image_message)
-    human_messages.append({"type": "text", "text": f"question: {query}"})
+    human_messages.append({"type": "text", "text": f"query: {query}"})
 
     messages = [
         (RoleType.SYSTEM, system_prompt),
@@ -145,6 +158,9 @@ information from image(s), if you can't find relevant information, just return e
     ]
     try:
         response = llm.invoke(messages)
+        logger.info(
+            f"Successfully extract information from images {response.content}"
+        )
     except Exception as e:
         logger.exception(f"Failed to retrieve data from image with LLM: {e}")
 
@@ -209,13 +225,12 @@ def run_tool(state: AgentState):
     tool_str_to_function = {
         "query_tax_data": query_tax_data,
         "search_tax_code": search_tax_code,
-        "search_data_from_images": search_data_from_images,
+        "search_tax_data_from_images": search_tax_data_from_images,
         "final_answer": final_answer,
     }
 
     tool_name = state["inter_steps"][-1].tool
     tool_args = state["inter_steps"][-1].tool_input
-    logger.info(f"{tool_name}.invoke(input={tool_args})")
 
     response = tool_str_to_function[tool_name].invoke(input=tool_args)
     action_output = AgentAction(
@@ -229,16 +244,15 @@ def build_rag_graph():
     tools = [
         query_tax_data,
         search_tax_code,
-        search_data_from_images,
+        search_tax_data_from_images,
         final_answer,
     ]
 
     system_message = """You are the central processor, the great AI decision maker.
 Given the user's query you must decide what to do with it based on the list of tools provided to you.
 
-If you see that a tool has been used (in the scratchpad) with a particular query, do \
-NOT use that same tool with the same query again. Also, do NOT use any tool more than \
-twice (ie, if the tool appears in the scratchpad twice, do not use it again).
+Do not use any tools (in the scratchpad) more than 2 times, also if you see that a tool has been used \
+with a particular query, do NOT use that same tool with the same query again. 
 
 You should aim to collect information from all available data source if needed before \
 providing the accurate answer to the user. Once you have collected enough information to \
@@ -280,6 +294,7 @@ the final_answer tool to generate final answer.
             tool=tool_name, tool_input=tool_args, log="TBD"
         )
 
+        logger.info(f"Next tool: {tool_name}, tool input: {tool_args}")
         return {"inter_steps": [action_output]}
 
     graph_builder = StateGraph(AgentState)
@@ -287,7 +302,7 @@ the final_answer tool to generate final answer.
     graph_builder.add_node("processor", run_processor)
     graph_builder.add_node("query_tax_data", run_tool)
     graph_builder.add_node("search_tax_code", run_tool)
-    graph_builder.add_node("search_data_from_images", run_tool)
+    graph_builder.add_node("search_tax_data_from_images", run_tool)
     graph_builder.add_node("final_answer", run_tool)
 
     graph_builder.set_entry_point("processor")

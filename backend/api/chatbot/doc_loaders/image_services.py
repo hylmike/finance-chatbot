@@ -54,6 +54,12 @@ def gen_image_summaries(
             logger.info(f"Successfully generated summary for image {image_url}")
             image_base64_list.append(image_base64)
             image_summaries.append(summary)
+            image_summary_file_name = (
+                "./data/ppt_images/ppt_image_summaries.txt"
+            )
+            with open(image_summary_file_name, "a") as f:
+                f.write(summary)
+                f.write("\n-----------\n")
         except Exception as e:
             logger.exception(f"Failed to summarize image {image_url}: {e}")
 

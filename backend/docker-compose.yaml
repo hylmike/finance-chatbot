@@ -15,7 +15,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
   chromadb:
-    image: chromadb/chroma:latest
+    image: chromadb/chroma:0.5.24.dev80
     command: --host 0.0.0.0 --port 8200
     volumes:
       - chroma_data:/chroma/chroma
@@ -46,6 +46,7 @@ services:
         restart: true
     volumes:
       - ./api:/home/backend/api
+      - ./data:/home/backend/data
 volumes:
   db_data:
   chroma_data:

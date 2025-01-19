@@ -545,14 +545,14 @@ uvicorn = {version = ">=0.18.3", extras = ["standard"]}
 
 [[package]]
 name = "chromadb-client"
-version = "0.6.3"
+version = "0.5.23"
 description = "Chroma Client."
 optional = false
-python-versions = ">=3.9"
+python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "chromadb_client-0.6.3-py3-none-any.whl", hash = "sha256:fcf8eafbfa85470fb17e860ad2fc7f88a1d8bd2c387708471bd50189c1f6ea9a"},
-    {file = "chromadb_client-0.6.3.tar.gz", hash = "sha256:5e69e416da2fa7a2e818b8791a5d3d580cdacbf27c896b7921957b869ad7e26b"},
+    {file = "chromadb_client-0.5.23-py3-none-any.whl", hash = "sha256:9e01e7f8f3764b0e1f029a0e3b345ee88d745d7fa50053f02ca5e639e76eccf9"},
+    {file = "chromadb_client-0.5.23.tar.gz", hash = "sha256:6ac6b9e3cd751b54eaf771c43f856b233c5f7eaf11879b14a4fe93be2fb76bac"},
 ]
 
 [package.dependencies]
@@ -4800,4 +4800,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "98f67d70ea7f36dc5e6b075818fa402687c7ff503cb48ea5abd154a1de2f2821"
+content-hash = "21a44adbbe318cefbdb6dd9cefccebcdc78b9bc11b680f413e4e94cbed3363c8"
