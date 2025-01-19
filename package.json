@@ -1,0 +1,19 @@
+{
+  "name": "finance-chatbot",
+  "version": "1.0.0",
+  "description": "Powerful tax chatbot powered by generative RAG and LLM",
+  "main": "index.js",
+  "scripts": {
+    "dev:frontend": "cd frontend && npm install && npm run dev",
+    "dev:backend": "cd backend && docker compose up"
+  },
+  "keywords": [
+    "Chatbot",
+    "RAG",
+    "LLM",
+    "Tax",
+    "Langgraph"
+  ],
+  "author": "Michael Hua",
+  "license": "ISC"
+}

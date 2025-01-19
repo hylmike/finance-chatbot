@@ -7,4 +7,10 @@ node-modules
 .vscode
 .yarn
 __pycache__
-*.ipynb
+logs
+npm-debug.log*
+dist
+dist-ssr
+*.local
+.idea
+.DS_Store

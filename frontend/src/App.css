@@ -1,0 +1,81 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.main-container {
+  background-color: black;
+  padding: 1rem;
+  width: 1000px;
+  height: 580px;
+  border-radius: 5px;
+}
+
+.title-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.user-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.user-greeting {
+  padding: 10px
+}
+
+.title {
+  padding: 0;
+  margin: 0;
+}
+
+.chat-history {
+  padding: 1rem;
+  width: 970px;
+  height: 420px;
+  text-align: left;
+  overflow: auto;
+  border: 1px;
+  border-color: darkslategray;
+  border-style: solid;
+  border-radius: 5px;
+}
+
+.chat-container {
+  display: flex;
+  align-items: center;
+}
+
+.question-container {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.ai-logo {
+  color: white;
+  margin-right: 5px;
+  margin-bottom: 10px;
+}
+
+.human-logo {
+  color: white;
+  margin-right: 5px;
+  margin-bottom: 10px;
+}
+
+.question-logo {
+  color: white;
+  margin-right: 5px;
+}
+
+.text-field {
+  background-color: darkgrey;
+  border-radius: 10px;
+}

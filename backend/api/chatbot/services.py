@@ -13,7 +13,11 @@ from .agents import (
 )
 from api.database.db import AsyncSession
 from .schemas import ChatRecord
-from .models import Chat as ChatModel, IngestedFile as IngestedFileModel
+from .models import (
+    Chat as ChatModel,
+    IngestedFile as IngestedFileModel,
+    RoleType,
+)
 from api.utils.hash_file import get_file_hash
 
 LAST_CHATS_NUM = 50
@@ -91,13 +95,17 @@ async def gen_knowledgebase(db: AsyncSession):
     return {"status": "Success", "error": None}
 
 
-def gen_ai_completion(db: AsyncSession, user_id: int, question: str) -> str:
+async def gen_ai_completion(
+    db: AsyncSession, user_id: int, question: str
+) -> str:
     graph = build_rag_graph()
 
+    # await ChatModel.create(
+    #     db, user_id=user_id, role_type=RoleType.HUMAN, content=question
+    # )
     response = graph.invoke({"question": question, "chat_history": []})
-    logger.info(f"Final response:\n{response}")
 
-    return response
+    return response["inter_steps"][-1].log
 
 
 async def get_chat_history(db: AsyncSession, user_id: int) -> list[ChatRecord]:

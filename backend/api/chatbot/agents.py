@@ -189,7 +189,7 @@ def create_scratchpad(inter_steps: list[AgentAction]):
         # If this is a tool execution
         if action.log != "TBD":
             analysis_steps.append(
-                f"Tools: {action.tool}, input: {action.tool_input}\n"
+                f"Tool: {action.tool}, input: {action.tool_input}\n"
                 f"Output: {action.log}"
             )
     return "\n-----\n".join(analysis_steps)
