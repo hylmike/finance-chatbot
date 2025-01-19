@@ -115,11 +115,29 @@ def query_tax_data(query: str):
     return f"SQL Query: {db_query}\nSQL Result: {str(result)}\n"
 
 
+def query_translation(question: str) -> list[str]:
+    """Use LLM to improve query content and get multiple alternative queries"""
+    prompt_template = """You are AI assistant. You task is to generate three different \
+versions of given question to retrieve relevant documents from a vector database. By \
+generating multiple perspectives on the user question, your goal is to help the user \
+overcome some of the limitations of the distance-based similarity search.
+Provide these alternative questions separated by newlines.
+Original Question: {question}"""
+    prompt = ChatPromptTemplate.from_template(prompt_template)
+    chain = prompt | llm | StrOutputParser() | (lambda x: x.split("\n"))
+    queries = chain.invoke({"question": question})
+
+    return queries
+
+
 @tool("search_tax_code")
 def search_tax_code(query: str):
     """Search queston related information from given vector database and return it"""
     vs_collection = get_chroma_collection()
-    retrieved_results = vs_collection.query(query_texts=[query], n_results=3)
+    enhanced_queries = query_translation(query)
+    retrieved_results = vs_collection.query(
+        query_texts=enhanced_queries, n_results=5
+    )
     retrieved_context = ""
     for element in retrieved_results["documents"]:
         if element:
