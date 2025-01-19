@@ -14,3 +14,4 @@ dist-ssr
 *.local
 .idea
 .DS_Store
+backend/data/ppt_images
