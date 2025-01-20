@@ -125,7 +125,11 @@ Provide these alternative questions separated by newlines.
 Original Question: {question}"""
     prompt = ChatPromptTemplate.from_template(prompt_template)
     chain = prompt | llm | StrOutputParser() | (lambda x: x.split("\n"))
-    queries = chain.invoke({"question": question})
+    try:
+        queries = chain.invoke({"question": question})
+    except Exception as e:
+        logger.error(f"Failed to get alternative queries from LLM: {e}")
+        return [question]
 
     return queries
 
@@ -135,10 +139,17 @@ def search_tax_code(query: str):
     """Search queston related information from given vector database and return it"""
     vs_collection = get_chroma_collection()
     enhanced_queries = query_translation(query)
-    retrieved_results = vs_collection.query(
-        query_texts=enhanced_queries, n_results=5
-    )
     retrieved_context = ""
+    try:
+        retrieved_results = vs_collection.query(
+            query_texts=enhanced_queries, n_results=5
+        )
+    except Exception as e:
+        logger.error(
+            f"Failed to retrieve results from vector database for query {enhanced_queries}: {str(e)}"
+        )
+        return retrieved_context
+
     for element in retrieved_results["documents"]:
         if element:
             retrieved_context += f"{element[0]}\n"
