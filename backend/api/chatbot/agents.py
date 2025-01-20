@@ -44,6 +44,7 @@ llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.01)
 
 
 def get_chroma_client():
+    """Utility function to get chroma DB client"""
     chroma_host = os.getenv("CHROMA_HOST", "chromadb")
     chroma_port = os.getenv("CHROMA_PORT", "8200")
     client = HttpClient(host=chroma_host, port=int(chroma_port))
@@ -51,6 +52,7 @@ def get_chroma_client():
 
 
 def get_chroma_collection():
+    """Utility function to get chroma collection for given collection name"""
     client = get_chroma_client()
     openai_ef = embedding_functions.OpenAIEmbeddingFunction(
         api_key=os.environ["OPENAI_API_KEY"],
@@ -66,6 +68,7 @@ def get_chroma_collection():
 def get_multi_vector_retriever(
     vs_client: HttpClient, embedding_function: EmbeddingFunction
 ) -> MultiVectorRetriever:
+    """Utility function to get multi_vector_retriever for images"""
     vector_store = Chroma(
         client=vs_client,
         collection_name=SUMMARY_COLLECTION_NAME,
@@ -229,6 +232,7 @@ Answer:
 
 
 def create_scratchpad(inter_steps: list[AgentAction]):
+    """Create scrptchpad based on inter_steps from AgentState"""
     analysis_steps = []
     for action in inter_steps:
         # If this is a tool execution
@@ -270,6 +274,7 @@ def run_tool(state: AgentState):
 
 
 def build_rag_graph():
+    """Build adapative RAG graph with all agent tools"""
     tools = [
         query_tax_data,
         search_tax_code,

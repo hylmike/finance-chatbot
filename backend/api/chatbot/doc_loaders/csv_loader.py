@@ -4,6 +4,8 @@ from api.utils.logger import logger
 
 
 class CSVLoader:
+    """CSV file loader, load table contents into SQL DB"""
+
     def __init__(self, db_engine):
         self.db_engine = db_engine
 

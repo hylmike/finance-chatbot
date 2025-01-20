@@ -17,6 +17,8 @@ IMAGE_URL_PREFIX = "./data/ppt_images"
 
 
 class PPTLoader:
+    """PPT file loader, load, indexing and save it into vector store"""
+
     def __init__(self, store: InMemoryStore, vs_client: HttpClient):
         embedding_function = OpenAIEmbeddings(model="text-embedding-3-large")
         self.text_vector_store = Chroma(

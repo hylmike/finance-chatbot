@@ -8,6 +8,8 @@ from api.utils.logger import logger
 
 
 class PDFLoader:
+    """PDF file loader, load, chunking, indexing and save it into vector store"""
+
     def __init__(self, vs_collection: Collection):
         self.collection = vs_collection
 

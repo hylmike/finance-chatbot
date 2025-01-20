@@ -57,6 +57,7 @@ def load_ppt_file(file_url: str, vs_client: HttpClient) -> MultiVectorRetriever:
 
 
 async def gen_knowledgebase(db: AsyncSession):
+    """Ingest all raw data files, indexing and save them into DB or vector DB"""
     try:
         csv_file_name = csv_file["file_url"].split("/")[-1]
         csv_file_hash = get_file_hash(csv_file["file_url"])
@@ -98,6 +99,7 @@ async def gen_knowledgebase(db: AsyncSession):
 async def gen_ai_completion(
     db: AsyncSession, user_id: int, question: str
 ) -> str:
+    """Use RAG with agents to generate AI completion for given question"""
     graph = build_rag_graph()
 
     await ChatModel.create(
@@ -113,5 +115,6 @@ async def gen_ai_completion(
 
 
 async def get_chat_history(db: AsyncSession, user_id: int) -> list[ChatRecord]:
+    """Load chat history for given user"""
     chat_history = await ChatModel.find_by_userid(db, user_id)
     return chat_history
