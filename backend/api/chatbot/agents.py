@@ -12,7 +12,6 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain.retrievers.multi_vector import MultiVectorRetriever
 from chromadb import HttpClient, EmbeddingFunction
-from chromadb.utils import embedding_functions
 from langchain_chroma import Chroma
 from langchain.storage import InMemoryStore
 from langgraph.graph import StateGraph, END
@@ -51,18 +50,16 @@ def get_chroma_client():
     return client
 
 
-def get_chroma_collection():
-    """Utility function to get chroma collection for given collection name"""
-    client = get_chroma_client()
-    openai_ef = embedding_functions.OpenAIEmbeddingFunction(
-        api_key=os.environ["OPENAI_API_KEY"],
-        model_name="text-embedding-3-large",
-    )
-    collection = client.get_or_create_collection(
-        TEXT_COLLECTION_NAME, embedding_function=openai_ef
-    )
-
-    return collection
+def get_vector_store(collection_name: str) -> Chroma:
+    vs_client = get_chroma_client()
+    embedding_function = OpenAIEmbeddings(model="text-embedding-3-large", dimensions=256)
+    vector_store = Chroma(
+            client=vs_client,
+            collection_name=TEXT_COLLECTION_NAME,
+            embedding_function=embedding_function,
+        )
+    
+    return vector_store
 
 
 def get_multi_vector_retriever(
@@ -120,7 +117,7 @@ def query_tax_data(query: str):
 
 def query_translation(question: str) -> list[str]:
     """Use LLM to improve query content and get multiple alternative queries"""
-    prompt_template = """You are AI assistant. You task is to generate three different \
+    prompt_template = """You are AI assistant. You task is to generate five different \
 versions of given question to retrieve relevant documents from a vector database. By \
 generating multiple perspectives on the user question, your goal is to help the user \
 overcome some of the limitations of the distance-based similarity search.
@@ -137,25 +134,44 @@ Original Question: {question}"""
     return queries
 
 
+def multi_queries_retriever(queries: list[str]) -> list[str]:
+    vector_store = get_vector_store(collection_name=TEXT_COLLECTION_NAME)
+    docs = []
+    for query in queries:
+        results = vector_store.similarity_search_with_score(
+            query=query,
+            k=3
+        )
+        for res, score in results:
+            docs.append((score, res.page_content))
+    docs.sort(key=lambda x: -x[0])
+    final_results = set()
+    for score, content in docs:
+        if not content in final_results:
+            final_results.add(content)
+            if len(final_results) >= 8:
+                break
+
+    return list(final_results)   
+    
+
+
 @tool("search_tax_code")
 def search_tax_code(query: str):
     """Search queston related information from given vector database and return it"""
-    vs_collection = get_chroma_collection()
+    
     enhanced_queries = query_translation(query)
     retrieved_context = ""
     try:
-        retrieved_results = vs_collection.query(
-            query_texts=enhanced_queries, n_results=5
-        )
+        retrieved_results = multi_queries_retriever(enhanced_queries)
     except Exception as e:
         logger.error(
             f"Failed to retrieve results from vector database for query {enhanced_queries}: {str(e)}"
         )
         return retrieved_context
 
-    for element in retrieved_results["documents"]:
-        if element:
-            retrieved_context += f"{element[0]}\n"
+    for result in retrieved_results:
+        retrieved_context += f"{result}\n"
 
     return retrieved_context
 
@@ -165,7 +181,7 @@ def search_tax_data_from_images(query: str):
     """Retrieve question related summaries from vector database, then feed summaries with related
     images as context to LLM to extract question related data from images"""
     client = get_chroma_client()
-    embedding_function = OpenAIEmbeddings(model="text-embedding-3-large")
+    embedding_function = OpenAIEmbeddings(model="text-embedding-3-large", dimensions=256)
     multi_retriever = get_multi_vector_retriever(
         vs_client=client, embedding_function=embedding_function
     )

@@ -8,12 +8,11 @@ from langchain.storage import InMemoryStore
 from langchain.retrievers.multi_vector import MultiVectorRetriever
 from langchain_core.documents import Document
 from chromadb import HttpClient
-from langchain_openai import OpenAIEmbeddings
 
 from api.utils.logger import logger
 from api.utils.id_generator import gen_document_id
 from .image_services import gen_image_summaries
-from api.chatbot.agents import TEXT_COLLECTION_NAME, SUMMARY_COLLECTION_NAME
+from api.chatbot.agents import TEXT_COLLECTION_NAME, SUMMARY_COLLECTION_NAME, get_vector_store
 
 IMAGE_URL_PREFIX = "./data/ppt_images"
 
@@ -22,17 +21,8 @@ class PPTLoader:
     """PPT file loader, load, indexing and save it into vector store"""
 
     def __init__(self, store: InMemoryStore, vs_client: HttpClient):
-        embedding_function = OpenAIEmbeddings(model="text-embedding-3-large")
-        self.text_vector_store = Chroma(
-            client=vs_client,
-            collection_name=TEXT_COLLECTION_NAME,
-            embedding_function=embedding_function,
-        )
-        self.summary_vector_store = Chroma(
-            client=vs_client,
-            collection_name=SUMMARY_COLLECTION_NAME,
-            embedding_function=embedding_function,
-        )
+        self.text_vector_store = get_vector_store(TEXT_COLLECTION_NAME)
+        self.summary_vector_store = get_vector_store(SUMMARY_COLLECTION_NAME)
         self.ppt_url = None
         self.store = store
 
@@ -76,7 +66,7 @@ class PPTLoader:
 
         if not os.path.exists(IMAGE_URL_PREFIX):
             os.makedirs(IMAGE_URL_PREFIX)
-            
+
         try:
             for index, slide in enumerate(ppt.slides):
                 slide_texts = []

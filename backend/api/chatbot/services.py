@@ -8,7 +8,7 @@ from api.chatbot.doc_loaders import CSVLoader, PDFLoader, PPTLoader
 from api.database.db import db_sync_engine
 from api.utils.logger import logger
 from .agents import (
-    get_chroma_collection,
+    TEXT_COLLECTION_NAME,
     build_rag_graph,
 )
 from api.database.db import AsyncSession
@@ -32,8 +32,7 @@ def load_csv_file(file: str):
 
 
 async def load_pdf_files(file_urls: list[str], db: AsyncSession):
-    collection = get_chroma_collection()
-    pdf_loader = PDFLoader(collection)
+    pdf_loader = PDFLoader(TEXT_COLLECTION_NAME)
     for file_url in file_urls:
         pdf_file_name = file_url.split("/")[-1]
         pdf_file_hash = get_file_hash(file_url)

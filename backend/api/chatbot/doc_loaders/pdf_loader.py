@@ -2,16 +2,17 @@
 
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from chromadb import Collection
+
 from api.utils.id_generator import gen_document_id
 from api.utils.logger import logger
+from api.chatbot.agents import get_vector_store
 
 
 class PDFLoader:
     """PDF file loader, load, chunking, indexing and save it into vector store"""
 
-    def __init__(self, vs_collection: Collection):
-        self.collection = vs_collection
+    def __init__(self, collection_name: str):
+        self.vector_store = get_vector_store(collection_name)
 
     def load(self, file_url: str):
         try:
@@ -22,7 +23,7 @@ class PDFLoader:
             )
             docs = text_splitter.split_documents(raw_docs)
 
-            self.collection.add(
+            self.vector_store.add_documents(
                 documents=[doc.page_content for doc in docs],
                 ids=[gen_document_id() for _ in range(len(docs))],
             )
