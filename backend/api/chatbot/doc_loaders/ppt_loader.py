@@ -1,3 +1,5 @@
+import os
+
 from pptx import Presentation
 from pptx.shapes.base import BaseShape
 from pptx.enum.shapes import MSO_SHAPE_TYPE
@@ -72,6 +74,9 @@ class PPTLoader:
         extracted_texts = []
         extracted_images = []
 
+        if not os.path.exists(IMAGE_URL_PREFIX):
+            os.makedirs(IMAGE_URL_PREFIX)
+            
         try:
             for index, slide in enumerate(ppt.slides):
                 slide_texts = []
