@@ -26,10 +26,13 @@ pdf_files = ["./data/i1040gi.pdf", "./data/usc26@118-78.pdf"]
 ppt_file = "./data/MIC_3e_Ch11.pptx"
 
 
-def load_csv_file(file: str):
+def load_csv_file(file: str) -> bool:
     csv_loader = CSVLoader(db_engine=db_sync_engine)
-    csv_loader.load(file_url=file["file_url"], table_name=file["table_name"])
-
+    if csv_loader.load(file_url=file["file_url"], table_name=file["table_name"]):
+        return True
+    else:
+        return False
+        
 
 async def load_pdf_files(file_urls: list[str], db: AsyncSession):
     pdf_loader = PDFLoader(TEXT_COLLECTION_NAME)
@@ -40,19 +43,21 @@ async def load_pdf_files(file_urls: list[str], db: AsyncSession):
             db=db, file_hash=pdf_file_hash
         )
         if not result:
-            pdf_loader.load(file_url)
-            await IngestedFileModel.create(
-                db=db, file_name=pdf_file_name, file_hash=pdf_file_hash
-            )
+            if pdf_loader.load(file_url):
+                await IngestedFileModel.create(
+                    db=db, file_name=pdf_file_name, file_hash=pdf_file_hash
+                )
         else:
             logger.info(f"Already ingested {file_url}, skip it")
 
 
-def load_ppt_file(file_url: str, vs_client: HttpClient) -> MultiVectorRetriever:
+def load_ppt_file(file_url: str, vs_client: HttpClient) -> bool:
     store = InMemoryStore()
     ppt_loader = PPTLoader(store=store, vs_client=vs_client)
 
-    ppt_loader.load(file_url)
+    if ppt_loader.load(file_url):
+        return True
+    return False
 
 
 async def gen_knowledgebase(db: AsyncSession):
@@ -64,10 +69,10 @@ async def gen_knowledgebase(db: AsyncSession):
             db=db, file_hash=csv_file_hash
         )
         if not result:
-            load_csv_file(csv_file)
-            await IngestedFileModel.create(
-                db=db, file_name=csv_file_name, file_hash=csv_file_hash
-            )
+            if load_csv_file(csv_file):
+                await IngestedFileModel.create(
+                    db=db, file_name=csv_file_name, file_hash=csv_file_hash
+                )
         else:
             logger.info(f"Already ingested {csv_file_name}, skip it")
 
@@ -82,10 +87,10 @@ async def gen_knowledgebase(db: AsyncSession):
             db=db, file_hash=ppt_file_hash
         )
         if not result:
-            load_ppt_file(file_url=ppt_file, vs_client=chroma_client)
-            await IngestedFileModel.create(
-                db=db, file_name=ppt_file_name, file_hash=ppt_file_hash
-            )
+            if load_ppt_file(file_url=ppt_file, vs_client=chroma_client):
+                await IngestedFileModel.create(
+                    db=db, file_name=ppt_file_name, file_hash=ppt_file_hash
+                )
         else:
             logger.info(f"Already ingested {ppt_file_name}, skip it")
     except Exception as e:

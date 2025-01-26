@@ -10,6 +10,7 @@
   - [Backend setup](#backend-setup)
   - [Frontend setup](#frontend-setup)
   - [Testing](#testing)
+  - [Reference](#reference)
 
 ## Overview and major functions
 The chatbot is powered by generative AI and RAG (Retrieved Augument Generation). 
@@ -43,6 +44,10 @@ Following are major functions in backend:
 
 #### Adapative RAG solution graph
 ![Solution Graph](solution_graph.png)
+
+### Backend query & indexing optimization in V2
+- use small dimensions (256) instead of high default value (3072) for text indexing to improve embedding efficiency, also keep similar MTEB score (62 vs 64.6)
+- Add image title as additional info feed to LLM to improve image summary in PPT file, this eventually can improve query accuracy
 
 ### Frontend functions
 Frontend is very simple, build based on React and Material UI. Just to let user ingest all the raw data (indexing and put them in SQL DB or vector DB) and interact with chatbot.
@@ -113,15 +118,22 @@ For CSV table contents, following is my testing questions:
    I don't know.
 
 For PPT file contents, following is my testing questions:
-1. What is impact of a tax on coffee supply?
+1. what is the mpact of a tax on the market for cups of coffee?
+   Answer I got:
+   The impact of a tax on the market for cups of coffee includes an increase in the price per cup from $1.33 to $1.40 and a decrease in the quantity supplied from 700 to 625 cups per week. The tax shifts the supply curve, creating a new equilibrium and generating tax revenue, while also resulting in a shortage at the higher price.
+2. What is impact of a tax on coffee supply?
    Answer I got:
    The impact of a tax on coffee supply typically leads to a decrease in supply, resulting in higher prices for consumers and a reduction in the quantity of coffee sold in the market.
-2. What is top marginal federal income tax rate in year 1980?
+3. What is top marginal federal income tax rate in year 1980?
    Answer I got:
    The top marginal federal income tax rate in 1980 was 70%.
-3. Whta is trend of total taxes in united states from year 1950 to 2010?
+4. Whta is trend of total taxes in united states from year 1950 to 2010?
    Answer I got:
    The trend of total taxes in the United States from 1950 to 2010 shows a general increase in tax receipts as a percent of GDP, with significant rises during periods of economic growth and increased government expenditure.
+
+
+## Reference
+[RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval](https://arxiv.org/html/2401.18059v1)
 
 
 
