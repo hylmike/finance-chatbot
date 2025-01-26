@@ -92,7 +92,7 @@ class PPTLoader:
 
         return extracted_texts, extracted_images
 
-    def load(self, file_url: str) -> bool:
+    async def load(self, file_url: str) -> bool:
         try:
             extracted_texts, extracted_images = self.extract_contents(file_url)
             # Embedding all extracted texts, one record per slide
@@ -104,7 +104,7 @@ class PPTLoader:
             self.text_vector_store.add_documents(documents=documents, ids=ids)
 
             # Create multi vector retriever to save image summary embeddings and raw image files
-            image_base64_list, image_summaries = gen_image_summaries(
+            image_base64_list, image_summaries = await gen_image_summaries(
                 extracted_images
             )
             id_key = "image_id"

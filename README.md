@@ -48,6 +48,7 @@ Following are major functions in backend:
 ### Backend query & indexing optimization in V2
 - use small dimensions (256) instead of high default value (3072) for text indexing to improve embedding efficiency, also keep similar MTEB score (62 vs 64.6)
 - Add image title as additional info feed to LLM to improve image summary in PPT file, this eventually can improve query accuracy
+- Optimize file loaders code to improve performance, especially for images LLM summary part, now add concurrent processing and saved 80% time compare to before
 
 ### Frontend functions
 Frontend is very simple, build based on React and Material UI. Just to let user ingest all the raw data (indexing and put them in SQL DB or vector DB) and interact with chatbot.
@@ -104,12 +105,12 @@ For PDF files contents, following is my testing questions:
    To handle tax for expensing environmental remediation costs, consider the following: 1. **Form 6251**: Complete this form if you have claimed certain items like accelerated depreciation or tax-exempt interest. 2. **Deductions**: Environmental remediation costs may be deductible as business expenses, but specific rules apply. Consult IRS guidelines or a tax professional for details. 3. **Health Savings Account (HSA) Deduction**: Contributions to an HSA may impact your tax situation. 4. **Moving Expenses**: Members of the Armed Forces may have specific deductions related to moving expenses. For precise guidance, consult a tax professional or refer to IRS publications.
 4. What is income range for married couples for 25% marginal tax rate?
    Answer I got:
-   The income range for married couples for the 25% marginal tax rate is over $190,750 but not over $364,200.
+   The income range for married couples filing jointly for the 25% marginal tax rate is between $80,000 and $171,050.
 
 For CSV table contents, following is my testing questions:
 1. What is total taxable income of state TX in 2019 for corporation taxpayer type?
    Answer I got:
-   The total taxable income for corporation taxpayer type in Texas for 2019 is 3,200,000.00.
+   The total taxable income of state TX in 2019 for corporation taxpayer type is $10,169,024.43.
 2. What is total tax owed for 2019 non-profit taxpayer type?
    Answer I got:
    The total tax owed for the 2019 non-profit taxpayer type is $22,146,449.79.

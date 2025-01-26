@@ -51,11 +51,12 @@ async def load_pdf_files(file_urls: list[str], db: AsyncSession):
             logger.info(f"Already ingested {file_url}, skip it")
 
 
-def load_ppt_file(file_url: str, vs_client: HttpClient) -> bool:
+async def load_ppt_file(file_url: str, vs_client: HttpClient) -> bool:
     store = InMemoryStore()
     ppt_loader = PPTLoader(store=store, vs_client=vs_client)
+    load_success = await ppt_loader.load(file_url)
 
-    if ppt_loader.load(file_url):
+    if load_success:
         return True
     return False
 
@@ -87,7 +88,8 @@ async def gen_knowledgebase(db: AsyncSession):
             db=db, file_hash=ppt_file_hash
         )
         if not result:
-            if load_ppt_file(file_url=ppt_file, vs_client=chroma_client):
+            is_success = await load_ppt_file(file_url=ppt_file, vs_client=chroma_client)
+            if is_success:
                 await IngestedFileModel.create(
                     db=db, file_name=ppt_file_name, file_hash=ppt_file_hash
                 )
