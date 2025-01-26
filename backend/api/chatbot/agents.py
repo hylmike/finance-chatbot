@@ -55,7 +55,7 @@ def get_vector_store(collection_name: str) -> Chroma:
     embedding_function = OpenAIEmbeddings(model="text-embedding-3-large", dimensions=256)
     vector_store = Chroma(
             client=vs_client,
-            collection_name=TEXT_COLLECTION_NAME,
+            collection_name=collection_name,
             embedding_function=embedding_function,
         )
     
