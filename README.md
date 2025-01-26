@@ -110,7 +110,7 @@ For PDF files contents, following is my testing questions:
 For CSV table contents, following is my testing questions:
 1. What is total taxable income of state TX in 2019 for corporation taxpayer type?
    Answer I got:
-   The total taxable income of state TX in 2019 for corporation taxpayer type is $10,169,024.43.
+   The total taxable income for corporation taxpayer type in Texas for 2019 is 3,200,000.00.
 2. What is total tax owed for 2019 non-profit taxpayer type?
    Answer I got:
    The total tax owed for the 2019 non-profit taxpayer type is $22,146,449.79.
