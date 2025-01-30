@@ -23,6 +23,7 @@ from api.utils.logger import logger
 
 TEXT_COLLECTION_NAME = "demo_text_collection"
 SUMMARY_COLLECTION_NAME = "demo_summary_collection"
+MAX_RETRIEVAL_RESULTS = 10
 
 
 class AgentState(TypedDict):
@@ -52,13 +53,15 @@ def get_chroma_client():
 
 def get_vector_store(collection_name: str) -> Chroma:
     vs_client = get_chroma_client()
-    embedding_function = OpenAIEmbeddings(model="text-embedding-3-large", dimensions=256)
+    embedding_function = OpenAIEmbeddings(
+        model="text-embedding-3-large", dimensions=256
+    )
     vector_store = Chroma(
-            client=vs_client,
-            collection_name=collection_name,
-            embedding_function=embedding_function,
-        )
-    
+        client=vs_client,
+        collection_name=collection_name,
+        embedding_function=embedding_function,
+    )
+
     return vector_store
 
 
@@ -138,28 +141,24 @@ def multi_queries_retriever(queries: list[str]) -> list[str]:
     vector_store = get_vector_store(collection_name=TEXT_COLLECTION_NAME)
     docs = []
     for query in queries:
-        results = vector_store.similarity_search_with_score(
-            query=query,
-            k=3
-        )
+        results = vector_store.similarity_search_with_score(query=query, k=3)
         for res, score in results:
             docs.append((score, res.page_content))
     docs.sort(key=lambda x: -x[0])
     final_results = set()
     for score, content in docs:
-        if not content in final_results:
+        if content not in final_results:
             final_results.add(content)
-            if len(final_results) >= 8:
+            if len(final_results) >= MAX_RETRIEVAL_RESULTS:
                 break
 
-    return list(final_results)   
-    
+    return list(final_results)
 
 
 @tool("search_tax_code")
 def search_tax_code(query: str):
     """Search queston related information from given vector database and return it"""
-    
+
     enhanced_queries = query_translation(query)
     retrieved_context = ""
     try:
@@ -181,7 +180,9 @@ def search_tax_data_from_images(query: str):
     """Retrieve question related summaries from vector database, then feed summaries with related
     images as context to LLM to extract question related data from images"""
     client = get_chroma_client()
-    embedding_function = OpenAIEmbeddings(model="text-embedding-3-large", dimensions=256)
+    embedding_function = OpenAIEmbeddings(
+        model="text-embedding-3-large", dimensions=256
+    )
     multi_retriever = get_multi_vector_retriever(
         vs_client=client, embedding_function=embedding_function
     )

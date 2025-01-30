@@ -6,6 +6,7 @@
   - [Overview and major functions](#overview-and-major-functions)
     - [Backend functions](#backend-functions)
       - [Adapative RAG solution graph](#adapative-rag-solution-graph)
+    - [Backend query \& indexing optimization in V2](#backend-query--indexing-optimization-in-v2)
     - [Frontend functions](#frontend-functions)
   - [Backend setup](#backend-setup)
   - [Frontend setup](#frontend-setup)
@@ -119,7 +120,7 @@ For CSV table contents, following is my testing questions:
    I don't know.
 
 For PPT file contents, following is my testing questions:
-1. what is the mpact of a tax on the market for cups of coffee?
+1. What is the impact of a tax on the market for cups of coffee?
    Answer I got:
    The impact of a tax on the market for cups of coffee includes an increase in the price per cup from $1.33 to $1.40 and a decrease in the quantity supplied from 700 to 625 cups per week. The tax shifts the supply curve, creating a new equilibrium and generating tax revenue, while also resulting in a shortage at the higher price.
 2. What is impact of a tax on coffee supply?
