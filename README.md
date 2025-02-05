@@ -6,7 +6,6 @@
   - [Overview and major functions](#overview-and-major-functions)
     - [Backend functions](#backend-functions)
       - [Adapative RAG solution graph](#adapative-rag-solution-graph)
-    - [Backend query \& indexing optimization in V2](#backend-query--indexing-optimization-in-v2)
     - [Frontend functions](#frontend-functions)
   - [Backend setup](#backend-setup)
   - [Frontend setup](#frontend-setup)
@@ -15,14 +14,14 @@
 
 ## Overview and major functions
 The chatbot is powered by generative AI and RAG (Retrieved Augument Generation). 
-- LLM I use OpenAI `GPT-4o-mini` which is high efficiency and fast multi-modal large language model, data embedding also use same. 
+- LLM use OpenAI `GPT-4o-mini` which is high efficiency and fast multi-modal large language model, data embedding also use same. 
 - Backend web framework I use `FastAPI` which is a very popular and high performance Python web framework built on AsyncIO and OpenAPI.
-- Frontend I use React, which is also powerful frontend web framework.
-- Generative AI framework I use Langchain, which is very popular and powerful framework which can efficiently develop generative AI features.
-- RAG part we also use LangGragh which is very powerful tool to support complication agentic work flow and adaptive RAG.
-- I also use Postgres as SQL DB and Chroma as vector data in app to save different kinds of data, I use docker build environment with these tools for app.
+- Frontend built a simple UI with React, to let user ingest all the raw data (indexing and put them in SQL DB or vector DB) and interact with chatbot.
+- Generative AI framework use Langchain, which is very popular and powerful framework which can efficiently develop generative AI features.
+- RAG part we also use LangGragh which is very powerful tool to support complicated agentic work flow and adaptive RAG.
+- Use Postgres as SQL DB and Chroma as vector data in app to save different kinds of data, I use docker build environment with these tools for app.
 - App inlcudes simple user management and authentication,
-- I have built a simple frontend UI to let user ingest all the raw data (indexing and put them in SQL DB or vector DB) and interact with chatbot
+- Simple frontend UI to let user ingest all the raw data (indexing and put them in SQL DB or vector DB) and interact with chatbot
 
 ### Backend functions
 Backend all APIs are built with Python and `FastAPI`, I also heavily use `Langchain` and `LangGraph` tools in chatbot related modules. I incudes docker-compose file to easily build and launch the backend locally with docker.
@@ -30,7 +29,7 @@ Backend all APIs are built with Python and `FastAPI`, I also heavily use `Langch
 Following are major functions in backend:
 - Simple auth based on OAuth2.0 and JWT
 - Simple user management, including add, get users etc. Chat management do need user inforation, this is the reason I including user management.
-- Differnt types of document ingestion, including
+- Different types of document ingestion, including
   - PDF file loader based on PyMuPdf, load PDF file, chunk, indexing and save into vector database (ChromaDB)
   - CSV file loader based on Pandas, load CSV file and import it into SQL database (Postgres)
   - PPT file loader based on Python-PPTX, load powerpoint file, extract all text and images, 
@@ -41,18 +40,16 @@ Following are major functions in backend:
 - Most service, especially database operation and web communicaiton part use full async way with better performance.
 - Use file hash to record all ingested documents in DB, this can avoid duplicated work in file ingestion.
 - Use docker to setup and management backend services, including API service, easy for testing and deployment.
-- Auto populate new tables and create an admin user for testing.
-
-#### Adapative RAG solution graph
-![Solution Graph](solution_graph.png)
-
-### Backend query & indexing optimization in V2
 - use small dimensions (256) instead of high default value (3072) for text indexing to improve embedding efficiency, also keep similar MTEB score (62 vs 64.6)
 - Add image title as additional info feed to LLM to improve image summary in PPT file, this eventually can improve query accuracy
 - Optimize file loaders code to improve performance, especially for images LLM summary part, now add concurrent processing and saved 80% time compare to before
 
+#### Adapative RAG solution graph
+![Solution Graph](solution_graph.png)
+
+
 ### Frontend functions
-Frontend is very simple, build based on React and Material UI. Just to let user ingest all the raw data (indexing and put them in SQL DB or vector DB) and interact with chatbot.
+Simple UI build based on React and Material UI, to let user ingest all the raw data (indexing and put them in SQL DB or vector DB) and interact with chatbot.
 
 Following are major functions in Frontend:
 - Auth support, all users need login to use app. Also button user can logout
@@ -93,8 +90,9 @@ As we already auto create an admin user in backend for testing, so you can use f
 
 4. You need first setup knowledge base to finish injestion of all data files. For this just click `GENERATE KNOWLEDGE BASE` button in top left corner. Normally it will take few minutes to finish everything, then you can chat with chatbot for any question.
 
+
 ## Testing
-For PDF files contents, following is my testing questions:
+For PDF files (7000+ pages document with complicated structure) contents, following are some questions can be used for testing:
 1. What is definition of CRVM and CARVM?
    Answer I got: 
    CRVM stands for 'Credit Risk Valuation Model', used to assess the risk associated with credit exposure. CARVM stands for 'Capital Asset Risk Valuation Model', a framework for evaluating the risk of capital assets in investment portfolios.
@@ -120,7 +118,7 @@ For CSV table contents, following is my testing questions:
    I don't know.
 
 For PPT file contents, following is my testing questions:
-1. What is the impact of a tax on the market for cups of coffee?
+1. what is the mpact of a tax on the market for cups of coffee?
    Answer I got:
    The impact of a tax on the market for cups of coffee includes an increase in the price per cup from $1.33 to $1.40 and a decrease in the quantity supplied from 700 to 625 cups per week. The tax shifts the supply curve, creating a new equilibrium and generating tax revenue, while also resulting in a shortage at the higher price.
 2. What is impact of a tax on coffee supply?
@@ -129,7 +127,7 @@ For PPT file contents, following is my testing questions:
 3. What is top marginal federal income tax rate in year 1980?
    Answer I got:
    The top marginal federal income tax rate in 1980 was 70%.
-4. Whta is trend of total taxes in united states from year 1950 to 2010?
+4. What is trend of total taxes in united states from year 1950 to 2010?
    Answer I got:
    The trend of total taxes in the United States from 1950 to 2010 shows a general increase in tax receipts as a percent of GDP, with significant rises during periods of economic growth and increased government expenditure.
 
