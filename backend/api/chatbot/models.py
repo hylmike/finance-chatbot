@@ -26,7 +26,7 @@ class Chat(Base):
     user_id = Column(Integer, ForeignKey("users.id"), index=True)
     role_type = Column(String, nullable=False)
     content = Column(String, nullable=False)
-    created = Column(DateTime, server_default=func.now())
+    created = Column(DateTime, server_default=func.now(), index=True)
 
     @classmethod
     async def create(cls, db: AsyncSession, **kwargs):
@@ -56,6 +56,46 @@ class Chat(Base):
             .limit(limit)
         )
         return query.all()
+
+    @classmethod
+    async def find_recent_chat_history(
+        cls, db: AsyncSession, user_id: int, limit: int
+    ):
+        query = await db.scalars(
+            select(cls)
+            .where(cls.user_id == user_id)
+            .order_by(cls.created.desc())
+            .limit(limit)
+        )
+        chat_records = query.all()
+        chat_history = {}
+        if not chat_records:
+            return chat_history
+        # If loaded last record is from ai (means answer only), discard it as we need pair of chat messages
+        while chat_records[-1].role_type == "ai":
+            chat_records.pop()
+        chat_records.sort(key=lambda x: x.created)
+
+        index = 0
+        while index < len(chat_records):
+            human_message = chat_records[index].content
+            ai_message = ""
+            index += 1
+            if (
+                index < len(chat_records)
+                and chat_records[index].role_type == "ai"
+            ):
+                ai_message = chat_records[index].content
+                index += 1
+            chat_history[human_message] = ai_message
+            # discard answer without question, normally this should not happen
+            while (
+                index < len(chat_records)
+                and chat_records[index].role_type == "ai"
+            ):
+                index += 1
+
+        return chat_history
 
 
 class IngestedFile(Base):

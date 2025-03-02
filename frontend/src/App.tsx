@@ -69,9 +69,13 @@ function App() {
       method: "POST",
       headers: { Authorization: `Bearer ${auth.token}` },
     });
-    if (res.status === 200) {
-      setRunningIngestion(false)
+    const result = await res.json()
+    setRunningIngestion(false)
+    if (res.status === 200 && result.status === 'Success') {
       alert("Successfully generate knowledgebase in backend!");
+    } else {
+      const errMessage = result?.error || res.status
+      alert(`Error happened when generating knowledgebase:\n ${errMessage}`);
     }
   }
 

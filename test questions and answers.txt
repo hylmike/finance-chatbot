@@ -1,0 +1,38 @@
+For PDF files contents, following are some testing questions:
+1. What is definition of CRVM and CARVM?
+   Answer example:
+   CRVM stands for 'Credit Risk Valuation Model', used to assess the risk associated with credit exposure. CARVM stands for 'Capital Asset Risk Valuation Model', a framework for evaluating the risk of capital assets in investment portfolios.
+2. How to calculate gift tax?
+   Answer example:
+   To calculate gift tax, follow these steps: 1. Enter the amount from line 9. 2. Subtract line 11 from line 10. 3. Enter specific amounts based on your filing status: - $492,300 if single, - $276,900 if married filing separately, - $553,850 if married filing jointly or qualifying surviving spouse, - $523,050 if head of household. 4. Enter the smaller of line 1 or line 13. 5. Add lines 5 and 9. 6. Subtract line 15 from line 14; if zero or less, enter -0-. 7. Enter the smaller of line 12 or line 16. 8. Multiply line 17 by 15% (0.15). 9. Figure the tax on the amount using the appropriate tax table or worksheet.
+3. How to handle tax for expensing of environmental remediation costs?
+   Answer example:
+   To handle tax for expensing environmental remediation costs, consider the following: 1. **Form 6251**: Complete this form if you have claimed certain items like accelerated depreciation or tax-exempt interest. 2. **Deductions**: Environmental remediation costs may be deductible as business expenses, but specific rules apply. Consult IRS guidelines or a tax professional for details. 3. **Health Savings Account (HSA) Deduction**: Contributions to an HSA may impact your tax situation. 4. **Moving Expenses**: Members of the Armed Forces may have specific deductions related to moving expenses. For precise guidance, consult a tax professional or refer to IRS publications.
+4. What is income range for married couples for 25% marginal tax rate?
+   Answer example:
+   The income range for married couples filing jointly for the 25% marginal tax rate is between $80,000 and $171,050.
+
+For CSV table contents, following are some testing questions:
+1. What is total taxable income of state TX in 2019 for corporation taxpayer type?
+   Answer example:
+   The total taxable income for corporation taxpayer type in Texas for 2019 is 3,200,000.00.
+2. What is total tax owed for 2019 non-profit taxpayer type?
+   Answer example:
+   The total tax owed for the 2019 non-profit taxpayer type is $22,146,449.79.
+3. What is total taxable income of state TX in 2024 for corporation taxpayer type?
+   Answer example: (Should be 'I don't know' as for sure there is no data in CSV table or LLM for that year)
+   I don't know.
+
+For PPT file contents, following are some testing questions:
+1. what is the mpact of a tax on the market for cups of coffee?
+   Answer example:
+   The impact of a tax on the market for cups of coffee includes an increase in the price per cup from $1.33 to $1.40 and a decrease in the quantity supplied from 700 to 625 cups per week. The tax shifts the supply curve, creating a new equilibrium and generating tax revenue, while also resulting in a shortage at the higher price.
+2. What is impact of a tax on coffee supply?
+   Answer example:
+   The impact of a tax on coffee supply typically leads to a decrease in supply, resulting in higher prices for consumers and a reduction in the quantity of coffee sold in the market.
+3. What is top marginal federal income tax rate in year 1980?
+   Answer example:
+   The top marginal federal income tax rate in 1980 was 70%.
+4. What is trend of total taxes in United States from year 1950 to 2010?
+   Answer example:
+   The trend of total taxes in the United States from 1950 to 2010 shows a general increase in tax receipts as a percent of GDP, with significant rises during periods of economic growth and increased government expenditure.

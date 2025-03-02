@@ -23,6 +23,7 @@ from api.utils.logger import logger
 
 TEXT_COLLECTION_NAME = "demo_text_collection"
 SUMMARY_COLLECTION_NAME = "demo_summary_collection"
+MAX_RETRIEVAL_RESULTS = 10
 
 
 class AgentState(TypedDict):
@@ -52,13 +53,15 @@ def get_chroma_client():
 
 def get_vector_store(collection_name: str) -> Chroma:
     vs_client = get_chroma_client()
-    embedding_function = OpenAIEmbeddings(model="text-embedding-3-large", dimensions=256)
+    embedding_function = OpenAIEmbeddings(
+        model="text-embedding-3-large", dimensions=256
+    )
     vector_store = Chroma(
-            client=vs_client,
-            collection_name=TEXT_COLLECTION_NAME,
-            embedding_function=embedding_function,
-        )
-    
+        client=vs_client,
+        collection_name=collection_name,
+        embedding_function=embedding_function,
+    )
+
     return vector_store
 
 
@@ -89,7 +92,9 @@ def write_query(question: str, db: SQLDatabase):
         {
             "dialect": db.dialect,
             "top_k": 10,
-            "table_info": db.get_table_info(),
+            # as we share DB with app for demo purpose, so here specify table name,
+            # normally should use separate DB from app, then just use all tables - db.get_table_info()
+            "table_info": db.get_table_info(["tax"]),
             "input": question,
         }
     )
@@ -101,7 +106,7 @@ def write_query(question: str, db: SQLDatabase):
 
 @tool("query_tax_data")
 def query_tax_data(query: str):
-    """Query question related data from give database and return SQL query and result"""
+    """Query question related data from database and return SQL query and result"""
     db = SQLDatabase(engine=db_sync_engine)
 
     # generate DB query based in question
@@ -138,28 +143,24 @@ def multi_queries_retriever(queries: list[str]) -> list[str]:
     vector_store = get_vector_store(collection_name=TEXT_COLLECTION_NAME)
     docs = []
     for query in queries:
-        results = vector_store.similarity_search_with_score(
-            query=query,
-            k=3
-        )
+        results = vector_store.similarity_search_with_score(query=query, k=3)
         for res, score in results:
             docs.append((score, res.page_content))
     docs.sort(key=lambda x: -x[0])
     final_results = set()
     for score, content in docs:
-        if not content in final_results:
+        if content not in final_results:
             final_results.add(content)
-            if len(final_results) >= 8:
+            if len(final_results) >= MAX_RETRIEVAL_RESULTS:
                 break
 
-    return list(final_results)   
-    
+    return list(final_results)
 
 
 @tool("search_tax_code")
 def search_tax_code(query: str):
-    """Search queston related information from given vector database and return it"""
-    
+    """Search question related information from given vector database and return it"""
+
     enhanced_queries = query_translation(query)
     retrieved_context = ""
     try:
@@ -181,7 +182,9 @@ def search_tax_data_from_images(query: str):
     """Retrieve question related summaries from vector database, then feed summaries with related
     images as context to LLM to extract question related data from images"""
     client = get_chroma_client()
-    embedding_function = OpenAIEmbeddings(model="text-embedding-3-large", dimensions=256)
+    embedding_function = OpenAIEmbeddings(
+        model="text-embedding-3-large", dimensions=256
+    )
     multi_retriever = get_multi_vector_retriever(
         vs_client=client, embedding_function=embedding_function
     )
@@ -301,14 +304,17 @@ def build_rag_graph():
     system_message = """You are the central processor, the great AI decision maker.
 Given the user's query you must decide what to do with it based on the list of tools provided to you.
 
-Do not use any tools (in the scratchpad) more than 2 times, also if you see that a tool has been used \
+Do not use same tool (in the scratchpad) more than 2 times, also if you see that a tool has been used \
 with a particular query, do NOT use that same tool with the same query again. 
 
-You should aim to collect information from all available data source if needed before \
-providing the accurate answer to the user. Once you have collected enough information to \
+You should aim to collect information from all tools if needed before providing \
+the accurate answer to the user. Once you have collected enough information to \
 answer the user's question (stored in the scratchpad), or you have used all tools \
 searching all available data but still can not find relevent infomation, then use \
 the final_answer tool to generate final answer.
+
+Keep in mind, it is not reliable to use past information answer question related \
+to future, for those situations it is better answer I don't know.
 """
 
     processor_prompt = ChatPromptTemplate.from_messages(
